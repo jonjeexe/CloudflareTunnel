@@ -1,4 +1,4 @@
-### Cloudflare SSH Debug Session (India Optimized)
+### Cloudflare Tunnel SSH Debug Sessions 
 
 Fork this repo into your account, then follow the steps below to set up secure SSH access to your GitHub Actions runner using Cloudflare Tunnel — no tmate lag, no relay servers, just fast and direct SSH from your phone.
 
