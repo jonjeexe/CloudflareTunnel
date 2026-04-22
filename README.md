@@ -120,7 +120,7 @@ Hi YourUsername! You've successfully authenticated...
 
 1. Go to your forked repo on GitHub
 2. Click the **Actions** tab
-3. Select **Cloudflare SSH Debug Session (India Optimized)**
+3. Select **Cloudflare Tunnel SSH**
 4. Click **Run workflow** → **Run workflow**
 5. Open the running job and expand the **Start Cloudflare Tunnel** step
 6. Wait for the tunnel URL to appear in the logs
