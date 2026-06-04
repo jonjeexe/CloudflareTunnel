@@ -31,6 +31,18 @@ jobs:
           chmod 600 ~/.ssh/authorized_keys
           echo "SSH keys added for: ${{ github.actor }}"
 
+      - name: Setup Bash Colors     
+        run: |
+          cat >> ~/.bashrc << 'EOF'
+          export PS1="\[\e[1;32m\]\u@\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\] \$ "
+          alias ls='ls --color=auto'
+          alias grep='grep --color=auto'
+          alias egrep='egrep --color=auto'
+          alias fgrep='fgrep --color=auto'
+          alias pkg='apt'
+          EOF
+          echo "source ~/.bashrc" >> ~/.bash_profile
+
       - name: Install Cloudflared & Tmux
         run: |
           curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
