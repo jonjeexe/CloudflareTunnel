@@ -34,7 +34,7 @@ jobs:
       - name: Setup Bash Colors
         run: |
           cat >> ~/.bashrc << 'EOF'
-          export PS1="\[\e[1;32m\]${{ github.actor }}@Ubuntu\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\] \$ "
+          export PS1="\[\e[1;32m\]${{ github.actor }}\[\e[0m\]\[\e[1;37m\]@\[\e[0m\]\[\e[1;31m\]Ubuntu\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\] \$ "
           alias ls='ls --color=auto'
           alias grep='grep --color=auto'
           alias egrep='egrep --color=auto'
