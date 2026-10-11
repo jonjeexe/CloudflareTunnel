@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      
+
       - name: Free disk space
         run: |
           sudo rm -rf /usr/share/dotnet
@@ -31,17 +31,51 @@ jobs:
           chmod 600 ~/.ssh/authorized_keys
           echo "SSH keys added for: ${{ github.actor }}"
 
-      - name: Setup Bash Colors
+      - name: Create User, Hostname & Auto-login
+        env:
+          GH_ACTOR: ${{ github.actor }}
         run: |
-          cat >> ~/.bashrc << 'EOF'
-          export PS1="\[\e[1;32m\]${{ github.actor }}\[\e[0m\]\[\e[1;37m\]@\[\e[0m\]\[\e[1;31m\]Ubuntu\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\] \$ "
+          # Linux usernames must be lowercase
+          USERNAME=$(echo "$GH_ACTOR" | tr '[:upper:]' '[:lower:]')
+
+          # Create user (password = root)
+          sudo adduser --disabled-password --gecos "" "$USERNAME"
+          echo "$USERNAME:root" | sudo chpasswd
+          sudo usermod -aG sudo "$USERNAME"
+          echo "$USERNAME ALL=(ALL:ALL) ALL" | sudo tee -a /etc/sudoers
+          sudo visudo -c
+
+          # Hostname
+          sudo hostnamectl set-hostname exe
+          echo "127.0.0.1 exe" | sudo tee -a /etc/hosts
+
+          # Copy SSH keys to new user
+          sudo mkdir -p /home/$USERNAME/.ssh
+          sudo cp ~/.ssh/authorized_keys /home/$USERNAME/.ssh/authorized_keys
+          sudo chown -R $USERNAME:$USERNAME /home/$USERNAME/.ssh
+          sudo chmod 700 /home/$USERNAME/.ssh
+          sudo chmod 600 /home/$USERNAME/.ssh/authorized_keys
+
+          # Bash colors for new user
+          sudo tee -a /home/$USERNAME/.bashrc > /dev/null << 'EOF'
+          export PS1="\[\e[1;32m\]\u\[\e[0m\]\[\e[1;37m\]@\[\e[0m\]\[\e[1;31m\]\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\] \$ "
           alias ls='ls --color=auto'
           alias grep='grep --color=auto'
           alias egrep='egrep --color=auto'
           alias fgrep='fgrep --color=auto'
           alias pkg='apt'
           EOF
-          echo "source ~/.bashrc" >> ~/.bash_profile
+          echo "source ~/.bashrc" | sudo tee -a /home/$USERNAME/.bash_profile
+          sudo chown $USERNAME:$USERNAME /home/$USERNAME/.bashrc /home/$USERNAME/.bash_profile
+
+          # Auto switch: SSH as runner -> su - username
+          cat >> ~/.bash_profile << EOF
+          if [ -n "\$SSH_CONNECTION" ]; then
+            exec sudo su - $USERNAME
+          fi
+          EOF
+
+          echo "User created: $USERNAME (password: root)"
 
       - name: Install Cloudflared & Tmux
         run: |
@@ -52,7 +86,10 @@ jobs:
           sudo apt-get install -y tmux
 
       - name: Start Cloudflare Tunnel & Print SSH Command
+        env:
+          GH_ACTOR: ${{ github.actor }}
         run: |
+          USERNAME=$(echo "$GH_ACTOR" | tr '[:upper:]' '[:lower:]')
           cloudflared tunnel --url tcp://localhost:22 > /tmp/cf.log 2>&1 &
 
           echo "Waiting for tunnel..."
@@ -83,7 +120,7 @@ jobs:
           echo "    ssh -o StrictHostKeyChecking=no \\"
           echo "      -o ProxyCommand='cloudflared access tcp \\"
           echo "      --hostname ${CF_URL}' \\"
-          echo "      runner@localhost"
+          echo "      ${USERNAME}@localhost"
           echo "."
           echo "--------------------------------------------"
           echo "  STEP 3 - Start tmux first:"
@@ -98,3 +135,4 @@ jobs:
           echo "============================================"
 
           sleep 21600
+          
