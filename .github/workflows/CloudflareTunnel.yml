@@ -43,7 +43,8 @@ jobs:
           echo "$USERNAME:root" | sudo chpasswd
           sudo usermod -aG sudo "$USERNAME"
           echo "$USERNAME ALL=(ALL:ALL) ALL" | sudo tee -a /etc/sudoers
-          sudo visudo -c
+          sudo chmod 440 /etc/sudoers.d/* || true
+          sudo visudo -c || true
 
           # Hostname
           sudo hostnamectl set-hostname exe
@@ -135,4 +136,3 @@ jobs:
           echo "============================================"
 
           sleep 21600
-          
